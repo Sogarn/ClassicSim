@@ -17,6 +17,7 @@ namespace ClassicSim
         public bool StrengthOfEarthBuff;
         public bool GraceOfAirBuff;
         public bool WindfuryBuff;
+        public bool WindfuryProc;
         public bool ElementsBuff;
         public int TargetSunders;
         public int TargetArmor;
@@ -49,6 +50,8 @@ namespace ClassicSim
         public int MaxResource;
         public float LastAction;
         public float CurrentResource;
+        public int ManaPerFive;
+        public float ManaPerFiveTickTime;
         public float BaseResourceGeneration;
         public float CombatResourceGeneration;
         public bool DotsAllowed;
@@ -75,7 +78,7 @@ namespace ClassicSim
             CombatResourceGeneration = 0;
         }
 
-        public abstract void Reset(float bonusCrit = 0, float timeRemaining = 0);
+        public abstract void Reset(float timeRemaining = 0);
         public abstract int NextAction();
 
         public void RefillResource()
@@ -88,10 +91,9 @@ namespace ClassicSim
             return RNG.Next(1, 101) <= HitChance;
         }
 
-        public bool RollCrit(double bonusCrit = 0)
+        public bool RollCrit(float tempCrit = 0)
         {
-            //bonusCrit = 0; // overrides winters chill
-            return RNG.Next(1, 101) <= (CritChance + bonusCrit);
+            return RNG.Next(1, 101) <= (CritChance + tempCrit);
         }
 
         public AttackResult RollHitAbility(int bonusHit = 0)
@@ -157,7 +159,8 @@ namespace ClassicSim
             {
                 return DualWieldAttackResult.Glancing;
             }
-            else if (roll - missChance - glanceChance - 6.5 <= CritChance)
+            // -3% chance to crit
+            else if (roll - missChance - glanceChance - 6.5 <= CritChance + 3)
             {
                 return DualWieldAttackResult.Crit;
             }

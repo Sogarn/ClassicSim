@@ -7,47 +7,65 @@ namespace ClassicSim
         static void Main(string[] args)
         {
             // Number of times to run sim
-            int iterations = 20000;
+            int iterations = 30000;
+            bool basic = true;
 
             // How long is the sim in seconds (for not weights)
-            int fightDuration = 180;
+            int fightDuration = 120;
 
-            MageSim(iterations, fightDuration);
-            //RogueSim(iterations, fightDuration);
+            MageSim(basic, iterations, fightDuration);
+            //RogueSim(basic, iterations, fightDuration);
         }
 
-        public static void MageSim(int iterations, int fightDuration)
+        public static void MageSim(bool basic, int iterations, int fightDuration)
         {
-            // Stats
-            string name = "Remek";
-            int intellect = 229;
-            int spirit = 187;
-            int spellPower = 122;
-            int frostPower = 91;
-            // 83% + 6% from talents for raid bosses
-            // 93% + 6% otherwise
-            // Cannot exceed 99%
-            int spellHit = 89 + 1;
-            int spellCrit = 0;
-            int rangedMin = 41;
-            int rangedMax = 78;
-            float rangedSwing = 1.6f;
-            bool intBuff = true;
-            bool spiritBuff = false;
-            bool wildBuff = false;
-            bool elementsBuff = false;
+            int[] durationArray = new int[] { 60, 120, 300};
 
-            Mage Remek = new Mage(name, intellect, spirit, spellPower, frostPower, spellCrit, spellHit,  
+            // Statse
+            string name = "Remek";
+            int intellect = 246;
+            int spirit = 176;
+            int spellPower = 254;
+            int frostPower = 61;
+            // 83% + 6% from talents for raid bosses
+            // Cannot exceed 99%
+            int spellHit = 89 + 2;
+            int spellCrit = 4;
+            int manaPerFive = 4;
+            int rangedMin = 52;
+            int rangedMax = 97;
+            float rangedSwing = 1.4f;
+            bool intBuff = true;
+            bool spiritBuff = true;
+            bool wildBuff = true;
+            bool elementsBuff = true;
+            bool arcanePower = true;
+            bool manaOrb = false;
+            bool manaChest = true;
+            bool talismanTrinket = false;
+
+            Mage Remek = new Mage(name, intellect, spirit, spellPower, frostPower, spellCrit, spellHit, manaPerFive,
                 rangedMin, rangedMax, rangedSwing,
-                intBuff, spiritBuff, wildBuff, elementsBuff)
+                intBuff, spiritBuff, wildBuff, elementsBuff, arcanePower, manaOrb, manaChest, talismanTrinket)
             {
                 // Whether to display action output
                 Logging = (iterations.Equals(1))
             };
 
-            if (iterations.Equals(1))
+            if (basic)
             {
-                BasicSims.RunSim(iterations, fightDuration, Remek, spellCrit);
+                BasicSims.RunSim(iterations, fightDuration, Remek);
+                //Remek.Intellect += 14 - 8;
+                //Remek.Spirit += 7 - 3;
+                //Remek.SpellPower += 23 - 29;
+                //Remek.TalismanEquipped = true;
+                //Remek.BaseCrit += 1 - 0;
+                //Remek.HitChance += 0 - 0;
+                //Remek.ManaPerFive += 4;
+                //Remek.RangedMinDamage = 68;
+                //Remek.RangedMaxDamage = 127;
+                //Remek.RangedSwing = 1.8f;
+                //BasicSims.RunSim(iterations, fightDuration, Remek);
                 Console.ReadLine();
             }
             else
@@ -55,12 +73,11 @@ namespace ClassicSim
                 // Multiple fight durations in sequence
                 int statStep = 5;
                 int statRange = 50;
-                int[] durationArray = new int[] { 60, 120, 180, 240, 300, 360 };
-                StatWeightSims.SimWeights(Remek, iterations, statStep, statRange, durationArray);
+                StatWeightSims.MageSimWeights(Remek, iterations, statStep, statRange, durationArray);
             }
         }
 
-        public static void RogueSim(int iterations, int fightDuration)
+        public static void RogueSim(bool basic, int iterations, int fightDuration)
         {
             string name = "Munroe";
             int agility = 210;
@@ -81,7 +98,7 @@ namespace ClassicSim
             int ohMinDamage = 52;
             int ohMaxDamage = 97;
             float ohSwing = 1.8f;
-            bool strengthOfEarthBuff = false;
+            bool strengthOfEarthBuff = true;
             bool graceOfAirBuff = false;
             bool windfuryBuff = false;
             bool wildBuff = true;
@@ -94,9 +111,11 @@ namespace ClassicSim
                 Logging = iterations.Equals(1)
             };
 
-            if (iterations.Equals(1))
+            if (basic)
             {
-                BasicSims.RunSim(iterations, fightDuration, Munroe, critChance);
+                BasicSims.RunSim(iterations, fightDuration, Munroe);
+                Munroe.WindfuryBuff = true;
+                BasicSims.RunSim(iterations, fightDuration, Munroe);
                 Console.ReadLine();
             }
             else
@@ -104,8 +123,8 @@ namespace ClassicSim
                 // Multiple fight durations in sequence
                 int statStep = 5;
                 int statRange = 50;
-                int[] durationArray = new int[] { 180};
-                StatWeightSims.SimWeights(Munroe, iterations, statStep, statRange, durationArray);
+                int[] durationArray = new int[] {180};
+                StatWeightSims.RogueSimWeights(Munroe, iterations, statStep, statRange, durationArray);
             }
         }
     }

@@ -64,8 +64,8 @@ namespace ClassicSim
             WildBuff = wildBuff;
             if (WildBuff)
             {
-                Strength += 10;
-                Agility += 10;
+                Strength += 12;
+                Agility += 12;
             }
             DotsAllowed = dotsAllowed;
             MaxResource = 100;
@@ -73,7 +73,7 @@ namespace ClassicSim
             Reset();
         }
 
-        public override void Reset(float bonusCritChance = 0, float timeRemaining = 0)
+        public override void Reset(float timeRemaining = 0)
         {
             Time = 0;
             TimeRemaining = timeRemaining;
@@ -89,12 +89,13 @@ namespace ClassicSim
             RemainingSliceAndDice = 0;
             RemainingBladeFlurry = 0;
             RemainingAdrenalineRush = 0;
+            WindfuryProc = false;
             MhSwingRemaining = MhSwing;
             OhSwingRemaining = OhSwing;
             FinalAttackPower = Strength + Agility + AttackPower + 2 * 60 - 20;
             OrcRacialBonus = 111;
             // Bosses have -3% crit
-            CritChance = BaseCrit + bonusCritChance + Agility / 29 - 3;
+            CritChance = BaseCrit + Agility / 29 - 3;
             if (CritChance < 0)
             {
                 CritChance = 0;
@@ -109,7 +110,7 @@ namespace ClassicSim
 
         public int MhAttack()
         {
-            int damage = RNG.Next(MhMinDamage, MhMaxDamage + 1) + (int)((FinalAttackPower + (RemainingOrcRacial > 0 ? OrcRacialBonus : 0)) * (MhSwing / 14));
+            int damage = RNG.Next(MhMinDamage, MhMaxDamage + 1) + (int)((FinalAttackPower + (WindfuryProc ? 315 : 0) + (RemainingOrcRacial > 0 ? OrcRacialBonus : 0)) * (MhSwing / 14));
             damage = (int)(damage * ArmorReduction());
 
             string result = "";
@@ -148,7 +149,8 @@ namespace ClassicSim
             }
 
             int poisonDamage = 0;
-            if (damage > 0)
+            // Windfury and poison are mutually exclusive
+            if (damage > 0 && !WindfuryBuff)
             {
                 // Do poison checks if damage > 0 (hit somehow)
                 if (MhPoisonCharges > 0 && RNG.Next(1, 101) <= 20)
@@ -162,6 +164,8 @@ namespace ClassicSim
                 }
             }
 
+            // Update windfury
+            WindfuryProc = false;
             return damage + poisonDamage;
         }
 
@@ -244,7 +248,7 @@ namespace ClassicSim
             {
                 case AttackResult.Miss:
                     damage = 0;
-                    SubtractResource(50 * .75f);
+                    SubtractResource(50 * .2f);
                     result = "misses";
                     break;
                 case AttackResult.Crit:
@@ -273,7 +277,7 @@ namespace ClassicSim
             switch (RollHitAbility(HitChance))
             {
                 case AttackResult.Miss:
-                    SubtractResource(50 * .75f);
+                    SubtractResource(50 * .2f);
                     result = "misses";
                     break;
                 default:
@@ -343,7 +347,7 @@ namespace ClassicSim
             switch (RollHitAbility(HitChance))
             {
                 case AttackResult.Miss:
-                    SubtractResource(25 * .75f);
+                    SubtractResource(25 * .2f);
                     GenerateComboPoints(investedComboPoints);
                     result = "misses";
                     break;
@@ -396,7 +400,7 @@ namespace ClassicSim
                 case AttackResult.Miss:
                     baseDamage = 0;
                     GenerateComboPoints(investedComboPoints);
-                    SubtractResource(25 * .75f);
+                    SubtractResource(25 * .2f);
                     result = "misses";
                     break;
                 case AttackResult.Crit:
@@ -470,6 +474,16 @@ namespace ClassicSim
             if (!Stealth && MhSwingRemaining <= 0)
             {
                 totalDamage += MhAttack();
+                // Handle windfury procs
+                if (WindfuryBuff && RNG.Next(1,101) <= 20)
+                {
+                    if (Logging)
+                    {
+                        Console.WriteLine(Math.Round(Time, 1) + ": Windfury proc");
+                    }
+                    WindfuryProc = true;
+                    totalDamage += MhAttack();
+                }
                 MhSwingRemaining += MhSwing;
                 // Cheat and put sunders here
                 if (TargetSunders < 5)
